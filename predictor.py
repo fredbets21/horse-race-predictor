@@ -12,17 +12,27 @@ def extract_win_percent_from_jockey_tooltip(hpop0_html):
     return int(match.group(1)) if match else 0
 
 
+def from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+import os
+
 def launch_browser_get_html(url):
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    driver = webdriver.Chrome(options=options)
-    print("🌐 Launching browser...")
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+
+    # These two lines are needed for Streamlit Cloud:
+    chrome_options.binary_location = "/usr/bin/google-chrome"
+    driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
+
     driver.get(url)
-    time.sleep(5)
+    driver.implicitly_wait(5)
     html = driver.page_source
     driver.quit()
     return html
+
 
 
 def parse_racecard(html):
