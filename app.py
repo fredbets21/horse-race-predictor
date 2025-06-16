@@ -1,7 +1,7 @@
 import streamlit as st
 from predictor import launch_browser_get_html, parse_racecard, score_horse
 
-st.set_page_config(page_title="Horse Race Predictor", page_icon="🏇")
+st.set_page_config(page_title="The Racing Algo", page_icon="🏇")
 st.title("🏇 Horse Race Predictor")
 
 url = st.text_input("Enter IrishRacing racecard URL:")
