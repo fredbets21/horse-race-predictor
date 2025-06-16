@@ -1,7 +1,9 @@
 import time
 import re
 from bs4 import BeautifulSoup
-import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 import os
 
 
@@ -13,28 +15,42 @@ def extract_win_percent_from_jockey_tooltip(hpop0_html):
 
 
 def launch_browser_get_html(url):
-    options = uc.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-plugins")
-    options.add_argument("--disable-images")
-    options.add_argument("--disable-javascript")
-    options.add_argument("--single-process")
-    options.add_argument("--disable-setuid-sandbox")
-    options.add_argument("--user-agent=Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36")
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-logging")
+    chrome_options.add_argument("--disable-web-security")
+    chrome_options.add_argument("--allow-running-insecure-content")
+    chrome_options.add_argument("--single-process")
+    chrome_options.add_argument("--remote-debugging-port=9222")
+    
+    # Set Chrome binary path for Streamlit Cloud
+    chrome_options.binary_location = "/usr/bin/chromium-browser"
+    
+    # Use specific chromedriver path
+    service = Service("/usr/bin/chromedriver")
     
     try:
-        driver = uc.Chrome(options=options, version_main=None)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(url)
         driver.implicitly_wait(5)
         html = driver.page_source
         return html
     except Exception as e:
         print(f"Failed to create Chrome driver: {e}")
-        raise
+        # Fallback without specifying service
+        try:
+            driver = webdriver.Chrome(options=chrome_options)
+            driver.get(url)
+            driver.implicitly_wait(5)
+            html = driver.page_source
+            return html
+        except Exception as e2:
+            print(f"Fallback also failed: {e2}")
+            raise
     finally:
         if 'driver' in locals():
             driver.quit()
@@ -135,6 +151,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
 
 
 
