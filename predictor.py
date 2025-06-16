@@ -3,7 +3,6 @@ import re
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import os
 
@@ -23,15 +22,40 @@ def launch_browser_get_html(url):
 
     # These two lines are needed for Streamlit Cloud:
     chrome_options.binary_location = "/usr/bin/google-chrome"
-
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
 
     driver.get(url)
     driver.implicitly_wait(5)
     html = driver.page_source
     driver.quit()
     return html
+    
+    # Try to set binary location if it exists
+    possible_chrome_paths = [
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium-browser",
+        "/usr/bin/chromium"
+    ]
+    
+    for chrome_path in possible_chrome_paths:
+        if os.path.exists(chrome_path):
+            chrome_options.binary_location = chrome_path
+            break
+
+    try:
+        # Use selenium-manager (recommended approach)
+        driver = webdriver.Chrome(options=chrome_options)
+    except Exception as e:
+        print(f"Failed to create Chrome driver: {e}")
+        raise
+
+    try:
+        driver.get(url)
+        driver.implicitly_wait(5)
+        html = driver.page_source
+        return html
+    finally:
+        driver.quit()
 
 
 def parse_racecard(html):
