@@ -3,7 +3,6 @@ import re
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 import os
 
 
@@ -19,16 +18,12 @@ def launch_browser_get_html(url):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-
-    # These two lines are needed for Streamlit Cloud:
-    chrome_options.binary_location = "/usr/bin/google-chrome"
-    driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
-
-    driver.get(url)
-    driver.implicitly_wait(5)
-    html = driver.page_source
-    driver.quit()
-    return html
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--remote-debugging-port=9222")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-plugins-discovery")
+    chrome_options.add_argument("--disable-web-security")
+    chrome_options.add_argument("--allow-running-insecure-content")
     
     # Try to set binary location if it exists
     possible_chrome_paths = [

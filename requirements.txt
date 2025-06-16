@@ -1,5 +1,6 @@
 streamlit
 beautifulsoup4
-selenium
-webdriver-manager
+selenium>=4.15.0
+
+
 
