@@ -19,23 +19,30 @@ def launch_browser_get_html(url):
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--remote-debugging-port=9222")
+    chrome_options.add_argument("--disable-software-rasterizer")
+    chrome_options.add_argument("--disable-background-timer-throttling")
+    chrome_options.add_argument("--disable-backgrounding-occluded-windows")
+    chrome_options.add_argument("--disable-renderer-backgrounding")
+    chrome_options.add_argument("--disable-features=TranslateUI")
+    chrome_options.add_argument("--disable-ipc-flooding-protection")
     chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-plugins-discovery")
+    chrome_options.add_argument("--disable-plugins")
+    chrome_options.add_argument("--disable-default-apps")
     chrome_options.add_argument("--disable-web-security")
     chrome_options.add_argument("--allow-running-insecure-content")
+    chrome_options.add_argument("--single-process")
+    chrome_options.add_argument("--disable-setuid-sandbox")
+    chrome_options.add_argument("--disable-background-networking")
+    chrome_options.add_argument("--disable-default-apps")
+    chrome_options.add_argument("--disable-translate")
+    chrome_options.add_argument("--remote-debugging-port=9222")
+    chrome_options.add_argument("--user-agent=Mozilla/5.0")
     
-    # Try to set binary location if it exists
-    possible_chrome_paths = [
-        "/usr/bin/google-chrome",
-        "/usr/bin/chromium-browser",
-        "/usr/bin/chromium"
-    ]
+    # Set binary location for Streamlit Cloud
+    chrome_options.binary_location = "/usr/bin/chromium-browser"
     
-    for chrome_path in possible_chrome_paths:
-        if os.path.exists(chrome_path):
-            chrome_options.binary_location = chrome_path
-            break
+    # Set window size
+    chrome_options.add_argument("--window-size=1920,1080")
 
     try:
         # Use selenium-manager (recommended approach)
