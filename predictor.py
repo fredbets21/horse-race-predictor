@@ -2,15 +2,13 @@ import time
 import re
 from bs4 import BeautifulSoup
 import requests
-import os
-
+import streamlit as st
 
 def extract_win_percent_from_jockey_tooltip(hpop0_html):
     soup = BeautifulSoup(hpop0_html, "html.parser")
     text = soup.get_text(" ", strip=True)
     match = re.search(r'\d+\s+wins\s+in\s+\d+\s+runs\s*\((\d{1,3})%\)', text)
     return int(match.group(1)) if match else 0
-
 
 def launch_browser_get_html(url):
     headers = {
@@ -28,17 +26,12 @@ def launch_browser_get_html(url):
     try:
         response = session.get(url, timeout=15)
         response.raise_for_status()
-        
-        # Add a small delay to mimic human behavior
-        time.sleep(1)
-        
+        time.sleep(1)  # mimic human behavior
         return response.text
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
-        raise
+        raise Exception(f"Request failed: {e}")
     finally:
         session.close()
-
 
 def parse_racecard(html):
     soup = BeautifulSoup(html, "html.parser")
@@ -67,7 +60,7 @@ def parse_racecard(html):
             # Trainer
             trainer_tag = row.find("a", href=re.compile("/trainer/"))
             horse["trainer"] = trainer_tag.get_text(strip=True) if trainer_tag else "Unknown"
-            horse["trainer_win_pct"] = 0  # Not available
+            horse["trainer_win_pct"] = 0  # Optional: Can be implemented later
 
             # Jockey
             jockey_tag = row.find("a", href=re.compile("/jockey/"))
@@ -76,92 +69,65 @@ def parse_racecard(html):
             horse["jockey"] = jockey_name
             horse["jockey_win_pct"] = extract_win_percent_from_jockey_tooltip(jockey_data)
 
-            # Odds (display only)
+            # Odds
             odds_tag = row.find("span", class_="bkprice")
             horse["odds"] = odds_tag.get_text(strip=True) if odds_tag else "N/A"
 
             horses.append(horse)
 
         except Exception as e:
-            print(f"⚠️ Skipping horse due to error: {e}")
+            st.warning(f"⚠️ Skipping a horse due to error: {e}")
             continue
 
     return horses
 
-
 def score_horse(h):
     score = 0
-
-    # Form scoring
     score += h["form"].count("1") * 5
     score += h["form"].count("2") * 3
     score += h["form"].count("3") * 2
-
-    # CD win
     score += h["cd_win"] * 3
-
-    # Rating
     score += h["rating"] / 10
-
-    # Jockey (light weight)
     score += h["jockey_win_pct"] * 0.25
-
     return score
 
+# === STREAMLIT UI ===
+st.set_page_config(page_title="Horse Race Predictor", layout="wide")
+st.title("🏇 Horse Race Predictor")
+st.markdown("Enter an IrishRacing.com **racecard URL** to predict the finishing order based on form, rating, CD wins, jockey win % and show the odds.")
 
-def main():
-    url = input("🔗 Enter IrishRacing racecard URL: ").strip()
-    html = launch_browser_get_html(url)
-    horses = parse_racecard(html)
+url = st.text_input("🔗 Paste IrishRacing racecard URL (e.g., https://www.irishracing.com/card?race=...):")
 
-    if not horses:
-        print("❌ No horses found.")
-        return
+if url:
+    with st.spinner("🔍 Scraping race data..."):
+        try:
+            html = launch_browser_get_html(url)
+            horses = parse_racecard(html)
 
-    for horse in horses:
-        horse["score"] = score_horse(horse)
+            if not horses:
+                st.error("❌ No horses found. Please check the URL.")
+            else:
+                for horse in horses:
+                    horse["score"] = score_horse(horse)
 
-    ranked = sorted(horses, key=lambda x: x["score"], reverse=True)
+                ranked = sorted(horses, key=lambda x: x["score"], reverse=True)
 
-    print("\n🏇 Predicted Order:")
-    for i, h in enumerate(ranked, 1):
-        print(f"{i}. {h['name']} - Score: {h['score']:.1f} | "
-              f"Form: {h['form']} | CD Win: {'Yes' if h['cd_win'] else 'No'} | "
-              f"Rating: {h['rating']} | Jockey: {h['jockey']} ({h['jockey_win_pct']}%) | "
-              f"Odds: {h['odds']}")
+                st.success(f"✅ Prediction complete. {len(ranked)} horses found.")
+                st.subheader("🏁 Predicted Finishing Order:")
 
-    print(f"\n🥇 Most Likely Winner: {ranked[0]['name']}")
+                for i, h in enumerate(ranked, 1):
+                    st.markdown(f"""
+                    ### {i}. {h['name']}
+                    - **Score**: {h['score']:.1f}
+                    - **Form**: `{h['form']}`
+                    - **Course/Distance Win**: {'✅' if h['cd_win'] else '❌'}
+                    - **Rating**: {h['rating']}
+                    - **Jockey**: {h['jockey']} ({h['jockey_win_pct']}%)
+                    - **Odds**: `{h['odds']}`
+                    """)
+
+                st.markdown(f"---\n## 🥇 Most Likely Winner: **{ranked[0]['name']}**")
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
