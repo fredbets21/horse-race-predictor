@@ -2,7 +2,6 @@ import time
 import re
 from bs4 import BeautifulSoup
 import requests
-from requests_html import HTMLSession
 import os
 
 
@@ -14,27 +13,31 @@ def extract_win_percent_from_jockey_tooltip(hpop0_html):
 
 
 def launch_browser_get_html(url):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+    }
+    
+    session = requests.Session()
+    session.headers.update(headers)
+    
     try:
-        # Try requests-html first (handles JavaScript)
-        session = HTMLSession()
-        r = session.get(url)
-        r.html.render(timeout=20)  # This executes JavaScript
-        html = r.html.html
+        response = session.get(url, timeout=15)
+        response.raise_for_status()
+        
+        # Add a small delay to mimic human behavior
+        time.sleep(1)
+        
+        return response.text
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        raise
+    finally:
         session.close()
-        return html
-    except Exception as e:
-        print(f"requests-html failed: {e}")
-        try:
-            # Fallback to simple requests
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            return response.text
-        except Exception as e2:
-            print(f"Simple requests also failed: {e2}")
-            raise
 
 
 def parse_racecard(html):
@@ -132,7 +135,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
+
 
 
 
