@@ -1,6 +1,8 @@
-streamlit
-beautifulsoup4
 selenium>=4.15.0
+beautifulsoup4
+streamlit
+undetected-chromedriver
+
 
 
 

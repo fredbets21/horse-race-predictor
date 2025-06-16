@@ -1,8 +1,7 @@
 import time
 import re
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+import undetected_chromedriver as uc
 import os
 
 
@@ -14,50 +13,31 @@ def extract_win_percent_from_jockey_tooltip(hpop0_html):
 
 
 def launch_browser_get_html(url):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-software-rasterizer")
-    chrome_options.add_argument("--disable-background-timer-throttling")
-    chrome_options.add_argument("--disable-backgrounding-occluded-windows")
-    chrome_options.add_argument("--disable-renderer-backgrounding")
-    chrome_options.add_argument("--disable-features=TranslateUI")
-    chrome_options.add_argument("--disable-ipc-flooding-protection")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-plugins")
-    chrome_options.add_argument("--disable-default-apps")
-    chrome_options.add_argument("--disable-web-security")
-    chrome_options.add_argument("--allow-running-insecure-content")
-    chrome_options.add_argument("--single-process")
-    chrome_options.add_argument("--disable-setuid-sandbox")
-    chrome_options.add_argument("--disable-background-networking")
-    chrome_options.add_argument("--disable-default-apps")
-    chrome_options.add_argument("--disable-translate")
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--user-agent=Mozilla/5.0")
+    options = uc.ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-plugins")
+    options.add_argument("--disable-images")
+    options.add_argument("--disable-javascript")
+    options.add_argument("--single-process")
+    options.add_argument("--disable-setuid-sandbox")
+    options.add_argument("--user-agent=Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36")
     
-    # Set binary location for Streamlit Cloud
-    chrome_options.binary_location = "/usr/bin/chromium-browser"
-    
-    # Set window size
-    chrome_options.add_argument("--window-size=1920,1080")
-
     try:
-        # Use selenium-manager (recommended approach)
-        driver = webdriver.Chrome(options=chrome_options)
-    except Exception as e:
-        print(f"Failed to create Chrome driver: {e}")
-        raise
-
-    try:
+        driver = uc.Chrome(options=options, version_main=None)
         driver.get(url)
         driver.implicitly_wait(5)
         html = driver.page_source
         return html
+    except Exception as e:
+        print(f"Failed to create Chrome driver: {e}")
+        raise
     finally:
-        driver.quit()
+        if 'driver' in locals():
+            driver.quit()
 
 
 def parse_racecard(html):
