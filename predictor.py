@@ -1,9 +1,8 @@
 import time
 import re
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+import requests
+from requests_html import HTMLSession
 import os
 
 
@@ -15,45 +14,27 @@ def extract_win_percent_from_jockey_tooltip(hpop0_html):
 
 
 def launch_browser_get_html(url):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-logging")
-    chrome_options.add_argument("--disable-web-security")
-    chrome_options.add_argument("--allow-running-insecure-content")
-    chrome_options.add_argument("--single-process")
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    
-    # Set Chrome binary path for Streamlit Cloud
-    chrome_options.binary_location = "/usr/bin/chromium-browser"
-    
-    # Use specific chromedriver path
-    service = Service("/usr/bin/chromedriver")
-    
     try:
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-        driver.get(url)
-        driver.implicitly_wait(5)
-        html = driver.page_source
+        # Try requests-html first (handles JavaScript)
+        session = HTMLSession()
+        r = session.get(url)
+        r.html.render(timeout=20)  # This executes JavaScript
+        html = r.html.html
+        session.close()
         return html
     except Exception as e:
-        print(f"Failed to create Chrome driver: {e}")
-        # Fallback without specifying service
+        print(f"requests-html failed: {e}")
         try:
-            driver = webdriver.Chrome(options=chrome_options)
-            driver.get(url)
-            driver.implicitly_wait(5)
-            html = driver.page_source
-            return html
+            # Fallback to simple requests
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            return response.text
         except Exception as e2:
-            print(f"Fallback also failed: {e2}")
+            print(f"Simple requests also failed: {e2}")
             raise
-    finally:
-        if 'driver' in locals():
-            driver.quit()
 
 
 def parse_racecard(html):
@@ -152,6 +133,7 @@ def main():
 if __name__ == "__main__":
     main()
     
+
 
 
 
