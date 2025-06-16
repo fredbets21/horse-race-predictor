@@ -3,6 +3,7 @@ import re
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import os
 
@@ -13,6 +14,7 @@ def extract_win_percent_from_jockey_tooltip(hpop0_html):
     match = re.search(r'\d+\s+wins\s+in\s+\d+\s+runs\s*\((\d{1,3})%\)', text)
     return int(match.group(1)) if match else 0
 
+
 def launch_browser_get_html(url):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -21,7 +23,9 @@ def launch_browser_get_html(url):
 
     # These two lines are needed for Streamlit Cloud:
     chrome_options.binary_location = "/usr/bin/google-chrome"
-    driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
+
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     driver.get(url)
     driver.implicitly_wait(5)
@@ -125,6 +129,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
