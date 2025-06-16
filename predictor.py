@@ -3,6 +3,8 @@ import re
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+import os
 
 
 def extract_win_percent_from_jockey_tooltip(hpop0_html):
@@ -10,12 +12,6 @@ def extract_win_percent_from_jockey_tooltip(hpop0_html):
     text = soup.get_text(" ", strip=True)
     match = re.search(r'\d+\s+wins\s+in\s+\d+\s+runs\s*\((\d{1,3})%\)', text)
     return int(match.group(1)) if match else 0
-
-
-def from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-import os
 
 def launch_browser_get_html(url):
     chrome_options = Options()
@@ -32,7 +28,6 @@ def launch_browser_get_html(url):
     html = driver.page_source
     driver.quit()
     return html
-
 
 
 def parse_racecard(html):
